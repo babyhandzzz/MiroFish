@@ -1,8 +1,12 @@
 FROM python:3.11
 
-# 安装 Node.js （满足 >=18）及必要工具
+# Install Node.js (>=18), PDF tools (pandoc, weasyprint deps)
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends nodejs npm \
+  && apt-get install -y --no-install-recommends \
+     nodejs npm \
+     pandoc \
+     libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 libffi-dev libcairo2 \
+  && pip install --no-cache-dir weasyprint \
   && rm -rf /var/lib/apt/lists/*
 
 # 从 uv 官方镜像复制 uv

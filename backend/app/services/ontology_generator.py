@@ -197,7 +197,7 @@ class OntologyGenerator:
         result = self.llm_client.chat_json(
             messages=messages,
             temperature=0.3,
-            max_tokens=4096
+            max_tokens=8192
         )
 
         # Validate and post-process
@@ -254,6 +254,35 @@ Based on the above content, design entity types and relationship types suitable 
 
         return message
 
+    @staticmethod
+    def _to_pascal_case(name: str) -> str:
+        """Convert a name to PascalCase (Zep API requirement for entity types)."""
+        import re as _re
+        # Remove non-alphanumeric except spaces/underscores/hyphens
+        cleaned = _re.sub(r'[^a-zA-Z0-9\s_\-]', '', name)
+        # Split on spaces, underscores, hyphens, and camelCase boundaries
+        words = _re.split(r'[\s_\-]+', cleaned)
+        # Further split each word on camelCase boundaries
+        split_words = []
+        for w in words:
+            split_words.extend(_re.sub(r'([a-z])([A-Z])', r'\1 \2', w).split())
+        # Capitalize first letter of each word, join
+        return ''.join(w.capitalize() for w in split_words if w)
+
+    @staticmethod
+    def _to_screaming_snake_case(name: str) -> str:
+        """Convert a name to SCREAMING_SNAKE_CASE (Zep API requirement for edge types)."""
+        import re as _re
+        # Insert underscores at camelCase boundaries
+        s = _re.sub(r'([a-z])([A-Z])', r'\1_\2', name)
+        # Replace spaces, hyphens with underscores
+        s = _re.sub(r'[\s\-]+', '_', s)
+        # Remove non-alphanumeric except underscores
+        s = _re.sub(r'[^a-zA-Z0-9_]', '', s)
+        # Collapse multiple underscores
+        s = _re.sub(r'_+', '_', s).strip('_')
+        return s.upper()
+
     def _validate_and_process(self, result: Dict[str, Any]) -> Dict[str, Any]:
         """Validate and post-process results"""
 
@@ -274,6 +303,8 @@ Based on the above content, design entity types and relationship types suitable 
             # Ensure description does not exceed 100 characters
             if len(entity.get("description", "")) > 100:
                 entity["description"] = entity["description"][:97] + "..."
+            # Enforce PascalCase for entity names (Zep API requirement)
+            entity["name"] = self._to_pascal_case(entity.get("name", ""))
 
         # Validate relationship types
         for edge in result["edge_types"]:
@@ -283,6 +314,11 @@ Based on the above content, design entity types and relationship types suitable 
                 edge["attributes"] = []
             if len(edge.get("description", "")) > 100:
                 edge["description"] = edge["description"][:97] + "..."
+            # Enforce SCREAMING_SNAKE_CASE for edge names (Zep API requirement)
+            edge["name"] = self._to_screaming_snake_case(edge.get("name", ""))
+            for st in edge.get("source_targets", []):
+                st["source"] = self._to_pascal_case(st.get("source", ""))
+                st["target"] = self._to_pascal_case(st.get("target", ""))
 
         # Zep API limits: max 10 custom entity types, max 10 custom edge types
         MAX_ENTITY_TYPES = 10
