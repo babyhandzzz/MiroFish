@@ -15,10 +15,10 @@
 }
 
 #app {
-  font-family: 'JetBrains Mono', 'Space Grotesk', 'Noto Sans SC', monospace;
+  font-family: 'Inter', 'Space Grotesk', 'Noto Sans SC', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #000000;
+  color: #0A0A0A;
   background-color: #ffffff;
 }
 
@@ -33,11 +33,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #000000;
+  background: #C8CDD5;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #333333;
+  background: #6B7280;
 }
 
 /* Global button styles */
